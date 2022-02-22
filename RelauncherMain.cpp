@@ -269,6 +269,10 @@ int main(int argc, char_t** argv)
 		if (CreateProcess(NewExeName.c_str(), NewCommandline, nullptr, nullptr, bInheritHandles, dwFlags, nullptr, nullptr,
 						  &StartupInfo, &ProcInfo))
 		{
+			// Disable Ctrl+C handling -- it'll still be forwarded to the spawned process, so they can decide how to respond.
+			// If they terminate, so will we.
+			SetConsoleCtrlHandler(nullptr, TRUE);
+
 			// Wait for it to terminate
 			WaitForSingleObject(ProcInfo.hProcess, INFINITE);
 
