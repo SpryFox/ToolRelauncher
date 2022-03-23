@@ -58,3 +58,12 @@ Pull requests that extend ToolRelauncher to support other setups are welcome.
 
 ToolRelauncher has only been tested with clang 12 on Windows (from Visual Studio's package)
 and Linux, and with both unicode and non-unicode Windows build options.
+
+## Command line arguments
+
+Relauncher supports two command line arguments, which must be the first argument(s):
+
+ - `--debug-relauncher`: Print some debug output to help understand what Relauncher
+   considered when making its decision
+ - `--which-relauncher`: Print the name of the executable that would be launched to
+   stdout and then exit, and do not launch the target exe
