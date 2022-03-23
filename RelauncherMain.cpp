@@ -25,6 +25,7 @@
 #	ifdef UNICODE
 #		define stat _wstat
 #		define spawnv _wspawnv
+#		define printf_t wprintf_s
 
 #		define main wmain
 
@@ -36,6 +37,7 @@ typedef wchar_t char_t;
 #		define stat _stat
 #		define spawnv _spawnv
 #		define strdup _strdup
+#		define printf_t printf_s
 
 #		define LOG(Format, ...) fprintf_s(stderr, Format "\n", __VA_ARGS__)
 
@@ -110,6 +112,7 @@ const char_t* SeekPast(const char_t* Source, const char_t* Identifier)
 #elif defined(__linux__) // Building for Linux
 #	include <unistd.h>
 #	define TEXT(x) (x)
+#	define printf_t printf
 
 #	define LOG(Format, ...) fprintf(stderr, Format "\n", __VA_ARGS__)
 
@@ -145,11 +148,18 @@ str CombineExeNameAndSuffix(str ExeName, const bool bHasExeSuffix, int SuffixInd
 	}
 }
 
+const str TryGetArg(int Argc, char_t** Argv, int Index)
+{
+	return Index < Argc ? Argv[Index] : str();
+}
+
 int main(int argc, char_t** argv)
 {
 	static const char_t* DebugArgument = TEXT("--debug-relauncher");
+	static const char_t* WhichArgument = TEXT("--which-relauncher");
 	const auto ExeName = str(argv[0]);
-	const bool bDebug = argc > 1 ? str(argv[1]) == DebugArgument : false;
+	const bool bDebug = TryGetArg(argc, argv, 1) == DebugArgument || TryGetArg(argc, argv, 2) == DebugArgument;
+	const bool bWhich = TryGetArg(argc, argv, 1) == WhichArgument || TryGetArg(argc, argv, 2) == WhichArgument;
 	const bool bHasExeSuffix = ExeName.length() >= 4 && ExeName.substr(ExeName.length() - 4) == TEXT(".exe");
 
 	// Find which of the suffixes exist and pick the one with the most recent mtime
@@ -187,9 +197,14 @@ int main(int argc, char_t** argv)
 
 	if (MostRecentSuffixIndex >= 0)
 	{
-		LOG("==> Relauncher starting %s exe", PotentialSuffixes[MostRecentSuffixIndex].c_str());
 		const str NewExeName = CombineExeNameAndSuffix(ExeName, bHasExeSuffix, MostRecentSuffixIndex);
+		if (bWhich)
+		{
+			printf_t(TEXT("%s\n"), NewExeName.c_str());
+			return 0;
+		}
 
+		LOG("==> Relauncher starting %s exe", PotentialSuffixes[MostRecentSuffixIndex].c_str());
 #if defined(_WIN32)
 		// Because Windows is the worst, there's no "replace this process with a different process" call.
 		// They implement `_execve`, but under the hood it just spawns a new process and then the parent
