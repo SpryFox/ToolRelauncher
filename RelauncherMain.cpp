@@ -244,7 +244,7 @@ int main(int argc, char_t** argv)
 			return 1;
 		}
 
-		_tcsset_s(NewCommandline, NewCommandlineLength, TEXT('\0'));
+		memset(NewCommandline, 0, NewCommandlineLength * sizeof(char_t));
 		_tcscat_s(NewCommandline, NewCommandlineLength, ExePrefix);
 		_tcscat_s(NewCommandline, NewCommandlineLength, NewExeName.c_str());
 		_tcscat_s(NewCommandline, NewCommandlineLength, ExeSuffix);
