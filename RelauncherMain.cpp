@@ -237,10 +237,10 @@ int main(int argc, char_t** argv)
 		const char_t *ExePrefix = TEXT("\""),
 					 *ExeSuffix = TEXT("\" ");
 		const size_t NewCommandlineLength = _tcslen(Arguments) + NewExeName.length() + _tcslen(ExePrefix) + _tcslen(ExeSuffix) + 1;
-		char_t* NewCommandline = reinterpret_cast<char_t*>(_malloca(NewCommandlineLength * sizeof(wchar_t)));
+		char_t* NewCommandline = static_cast<char_t*>(calloc(NewCommandlineLength, sizeof(char_t)));
 		if (NewCommandline == nullptr)
 		{
-			LOG("ERROR: Failed to allocate new command line buffer (%zu bytes)", NewCommandlineLength * sizeof(wchar_t));
+			LOG("ERROR: Failed to allocate new command line buffer (%zu bytes)", NewCommandlineLength * sizeof(char_t));
 			return 1;
 		}
 
@@ -281,8 +281,10 @@ int main(int argc, char_t** argv)
 		DEBUG("$ %s", NewCommandline);
 
 		PROCESS_INFORMATION ProcInfo = {};
-		if (CreateProcess(NewExeName.c_str(), NewCommandline, nullptr, nullptr, bInheritHandles, dwFlags, nullptr, nullptr,
-						  &StartupInfo, &ProcInfo))
+		BOOL bWasStarted = CreateProcess(NewExeName.c_str(), NewCommandline, nullptr, nullptr, bInheritHandles, dwFlags, nullptr, nullptr,
+		                                 &StartupInfo, &ProcInfo);
+		free(NewCommandline);
+		if (bWasStarted)
 		{
 			// Disable Ctrl+C handling -- it'll still be forwarded to the spawned process, so they can decide how to respond.
 			// If they terminate, so will we.
